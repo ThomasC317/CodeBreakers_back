@@ -1,6 +1,11 @@
-const express = require('express');
+import express from "express"
+import { Server } from "socket.io";
+
 const app = express();
-const port = 3000;
+const port = 8000;
+const io = new Server(server);
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -9,3 +14,7 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+  });

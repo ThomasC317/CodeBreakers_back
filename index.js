@@ -40,8 +40,10 @@ io.on("connection", (socket) => {
     ) {
       lobby.players.push({ roomId: socket.id, player: data.username });
       socket.join(data.lobbyId);
-      io.in(data.room).emit("players_list", lobby.players);
+      socket.lobbyId = data.lobbyId;
+
       socket.emit("joined");
+      io.in(data.lobbyId).emit("players_list", lobby.players);
     } else {
       socket.emit("lobby_full_or_closed");
     }
@@ -63,9 +65,8 @@ io.on("connection", (socket) => {
     const availableLobbies = lobbies.filter(
       (lobby) => lobby.gameStatus === "waiting"
     );
-    console.log("lobby id :",lobbyId)
-    socket.emit("lobby_id", lobbyId);
     io.emit("lobbies_list", availableLobbies);
+    io.in(lobbyId).emit("players_list", newLobby.players);
   });
 
   socket.on("get_lobbies", () => {
@@ -78,16 +79,20 @@ io.on("connection", (socket) => {
   socket.on("launch_game", (data) => {
     console.log("data",data);
     console.log(lobbies)
-    const lobby = lobbies.find((lobby) => lobby.id === data.lobbyId);
+    const lobby = lobbies.find((lobby) => lobby.id === socket.lobbyId);
     lobby.gameStatus="playing";
     numberToGuess = generateRandomNumber(1, 1000);
     console.log("Number to guess: ", numberToGuess);
     console.log(lobby)
-    io.in(lobby.name).emit("number_to_guess", numberToGuess);
-
+    socket.emit("number_to_guess", numberToGuess);
+    socket.emit("player_list", lobby.players);
     const firstPlayer = getFirstPlayerToPlay(lobby.players);
 
-    io.to(firstPlayer.roomId).emit("your_turn", { message: "It's your turn!" });
+    socket.to(firstPlayer.roomId).emit("your_turn", { message: "It's your turn!" });
+    const availableLobbies = lobbies.filter(
+      (lobby) => lobby.gameStatus === "waiting"
+    );
+    io.emit("lobbies_list", availableLobbies);
   });
 
   socket.on("guess_number", (data) => {
@@ -95,7 +100,7 @@ io.on("connection", (socket) => {
 
     if (data.guess === numberToGuess) {
       const index = players.findIndex((player) => player.roomId === socket.id);
-      io.in(data.lobbyId).emit("victory", index);
+      socket.in(data.lobbyId).emit("victory", index);
     } else {
       if (data.guess < numberToGuess) {
         socket.emit("hint", { message: "Too low!" });
@@ -104,7 +109,7 @@ io.on("connection", (socket) => {
       }
 
       const nextPlayerId = getNextPlayer(socket.id);
-      io.to(nextPlayerId).emit("your_turn", { message: "It's your turn!" });
+      socket.to(nextPlayerId).emit("your_turn", { message: "It's your turn!" });
     }
   });
 

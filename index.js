@@ -56,12 +56,12 @@ io.on("connection", (socket) => {
       players: [],
       gameStatus: "waiting",
       name: data.lobbyname,
-      numberToGuess :0
+      numberToGuess: 0,
     };
     newLobby.players.push({ roomId: socket.id, player: data.username });
     lobbies.push(newLobby);
     socket.join(lobbyId);
- 
+
     socket.emit("joined");
     const availableLobbies = lobbies.filter(
       (lobby) => lobby.gameStatus === "waiting"
@@ -69,7 +69,6 @@ io.on("connection", (socket) => {
     socketLobbies.set(socket.id, lobbyId);
     socket.emit("players_list", newLobby.players);
     io.emit("lobbies_list", availableLobbies);
-  
   });
 
   socket.on("get_lobbies", () => {
@@ -85,48 +84,54 @@ io.on("connection", (socket) => {
     console.log(lobby);
     lobby.gameStatus = "playing";
     io.in(lobbyId).emit("game_launched");
-  
+
     const numberToGuess = generateRandomNumber(1, 1000);
-    console.log(numberToGuess)
-    io.in(lobbyId).emit("number_to_guess", numberToGuess); 
-    lobby.numberToGuess = numberToGuess
+    console.log(numberToGuess);
+    io.in(lobbyId).emit("number_to_guess", numberToGuess);
+    lobby.numberToGuess = numberToGuess;
     io.in(lobbyId).emit("player_list", lobby.players);
-  
+
     const firstPlayer = getFirstPlayerToPlay(lobby.players);
     console.log(firstPlayer);
-  
+
     if (firstPlayer && firstPlayer.roomId) {
-      io.to(firstPlayer.roomId).emit("your_turn", { message: "It's your turn!" });
+      io.to(firstPlayer.roomId).emit("your_turn", {
+        message: "It's your turn!",
+      });
       io.in(lobbyId).emit("current_player", { player: firstPlayer.player });
     }
-  
-    const availableLobbies = lobbies.filter((lobby) => lobby.gameStatus === "waiting");
+
+    const availableLobbies = lobbies.filter(
+      (lobby) => lobby.gameStatus === "waiting"
+    );
     io.emit("lobbies_list", availableLobbies);
   });
 
   socket.on("guess_number", (data) => {
     const lobbyId = socketLobbies.get(socket.id);
     const lobby = lobbies.find((lobby) => lobby.lobbyId === lobbyId);
-  
+
     if (!lobby) return;
-  
+
     if (data.guess === lobby.numberToGuess) {
-      const index = lobby.players.findIndex((player) => player.roomId === socket.id);
+      const index = lobby.players.findIndex(
+        (player) => player.roomId === socket.id
+      );
 
       io.in(lobbyId).emit("victory", { player: lobby.players[index].player });
     } else {
-
       if (data.guess < lobby.numberToGuess) {
         socket.emit("hint", { message: "Too low!" });
       } else if (data.guess > lobby.numberToGuess) {
         socket.emit("hint", { message: "Too high!" });
       }
-  
 
       let nextPlayerId = getNextPlayer(socket.id, lobby.players);
-  
+
       if (nextPlayerId) {
-        io.to(nextPlayerId.roomId).emit("your_turn", { message: "It's your turn!" });
+        io.to(nextPlayerId.roomId).emit("your_turn", {
+          message: "It's your turn!",
+        });
 
         io.in(lobbyId).emit("current_player", { player: nextPlayerId.player });
       }
@@ -163,7 +168,7 @@ const getFirstPlayerToPlay = (lobbyPlayers) => {
   return lobbyPlayers[randomIndex];
 };
 
-const getNextPlayer = (currentPlayerId,lobbyPlayers) => {
+const getNextPlayer = (currentPlayerId, lobbyPlayers) => {
   const currentIndex = lobbyPlayers.findIndex(
     (player) => player.roomId === currentPlayerId
   );

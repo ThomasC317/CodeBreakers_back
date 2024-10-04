@@ -15,7 +15,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-let numberToGuess = 0;
+
 const lobbies = [];
 
 app.use(
@@ -164,11 +164,20 @@ const generateRandomNumber = (min, max) => {
 };
 
 const getFirstPlayerToPlay = (lobbyPlayers) => {
+  if(lobbyPlayers.length === 1)
+  {
+    return lobbyPlayers[0];
+  }
   const randomIndex = Math.floor(Math.random() * lobbyPlayers.length);
   return lobbyPlayers[randomIndex];
 };
 
 const getNextPlayer = (currentPlayerId, lobbyPlayers) => {
+  if (lobbyPlayers.length === 1) {
+    // Si un seul joueur, on le retourne directement
+    return lobbyPlayers[0];
+  }
+  
   const currentIndex = lobbyPlayers.findIndex(
     (player) => player.roomId === currentPlayerId
   );

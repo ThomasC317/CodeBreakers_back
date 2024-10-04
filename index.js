@@ -11,7 +11,7 @@ const socketLobbies = new Map();
 const MAX_PLAYERS_PER_LOBBY = 4;
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://thomasc317.github.io/CodeBreakers/",
     methods: ["GET", "POST"],
   },
 });
@@ -20,7 +20,7 @@ const lobbies = [];
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://thomasc317.github.io/CodeBreakers/",
   })
 );
 
@@ -164,6 +164,7 @@ const generateRandomNumber = (min, max) => {
 };
 
 const getFirstPlayerToPlay = (lobbyPlayers) => {
+  console.log(lobbyPlayers.length)
   if(lobbyPlayers.length === 1)
   {
     return lobbyPlayers[0];
@@ -173,8 +174,8 @@ const getFirstPlayerToPlay = (lobbyPlayers) => {
 };
 
 const getNextPlayer = (currentPlayerId, lobbyPlayers) => {
+  console.log(lobbyPlayers.length)
   if (lobbyPlayers.length === 1) {
-    // Si un seul joueur, on le retourne directement
     return lobbyPlayers[0];
   }
   

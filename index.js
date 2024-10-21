@@ -137,6 +137,26 @@ io.on("connection", (socket) => {
       }
     }
   });
+  socket.on("leave_lobby", () => {
+    console.log("Player disconnected!");
+
+    socket.emit("player_left");
+
+    lobbies.forEach((lobby) => {
+      const playerIndex = lobby.players.findIndex(
+        (player) => player.roomId === socket.id
+      );
+
+      if (playerIndex !== -1) {
+        lobby.players.splice(playerIndex, 1);
+        if (lobby.players.length === 0) {
+          const lobbyIndex = lobbies.findIndex((l) => l.id === lobby.id);
+          lobbies.splice(lobbyIndex, 1);
+        }
+        io.in(lobby.id).emit("player_list", lobby.players);
+      }
+    });
+  });
 
   socket.on("disconnect", () => {
     console.log("disconnected!");
@@ -164,9 +184,8 @@ const generateRandomNumber = (min, max) => {
 };
 
 const getFirstPlayerToPlay = (lobbyPlayers) => {
-  console.log(lobbyPlayers.length)
-  if(lobbyPlayers.length === 1)
-  {
+  console.log(lobbyPlayers.length);
+  if (lobbyPlayers.length === 1) {
     return lobbyPlayers[0];
   }
   const randomIndex = Math.floor(Math.random() * lobbyPlayers.length);
@@ -174,11 +193,11 @@ const getFirstPlayerToPlay = (lobbyPlayers) => {
 };
 
 const getNextPlayer = (currentPlayerId, lobbyPlayers) => {
-  console.log(lobbyPlayers.length)
+  console.log(lobbyPlayers.length);
   if (lobbyPlayers.length === 1) {
     return lobbyPlayers[0];
   }
-  
+
   const currentIndex = lobbyPlayers.findIndex(
     (player) => player.roomId === currentPlayerId
   );
